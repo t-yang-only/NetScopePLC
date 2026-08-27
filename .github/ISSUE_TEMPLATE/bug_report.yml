@@ -1,0 +1,72 @@
+name: Bug 报告
+description: 扫描、识别、改址或构建异常
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请确认已用管理员权限复现，并阅读 [CONTRIBUTING.md](../CONTRIBUTING.md)。
+        **安全问题请走私密渠道**，不要写在这里。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 问题简述
+      description: 一句话说明发生了什么
+      placeholder: 例如：未知网段扫描结束后未恢复 DHCP
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 尽量逐步写出
+      placeholder: |
+        1. 选择网卡 …
+        2. 选择扫描模式 …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: 相关功能
+      multiple: true
+      options:
+        - 网卡枚举
+        - 本网段扫描
+        - 常见内网段扫描
+        - 手工 CIDR
+        - 临时改址 / 恢复
+        - 协议识别
+        - 现场改址 / DHCP
+        - 构建 / 发布
+        - 其他
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      description: Windows 版本、是否管理员、.NET / VS 版本（若与构建相关）
+      placeholder: Windows 11 · 管理员 · VS 18 Enterprise
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 截图说明
+      description: 可粘贴状态栏文案或原生输出行；请脱敏真实生产网段
+      render: text

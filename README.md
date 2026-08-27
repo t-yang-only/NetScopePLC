@@ -12,7 +12,15 @@
   <img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
   <img alt="UI" src="https://img.shields.io/badge/UI-WPF-188657">
   <img alt="Native" src="https://img.shields.io/badge/scan_core-C%20%2B%20WinSock-555555">
-  <img alt="License" src="https://img.shields.io/badge/license-use_at_own_risk-lightgrey">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
+</p>
+
+<p align="center">
+  <a href="CODE_OF_CONDUCT.md">Code of Conduct</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="SECURITY.md">Security</a> ·
+  <a href="CONTRIBUTORS.md">Contributors</a> ·
+  <a href="LICENSE">License</a>
 </p>
 
 ---
