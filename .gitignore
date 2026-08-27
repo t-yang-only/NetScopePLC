@@ -1,0 +1,9 @@
+bin/
+obj/
+publish/
+*.exe
+*.dll
+*.pdb
+*.obj
+*.user
+.vs/
