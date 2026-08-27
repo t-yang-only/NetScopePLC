@@ -211,17 +211,21 @@ public partial class MainWindow : Window
     private async Task IdentifyDeviceAsync(string address)
     {
         var labels = new List<string>();
-        try { labels.Add((await Dns.GetHostEntryAsync(address)).HostName); } catch { }
-        foreach (var port in new[] { 102, 502, 44818, 4840 })
-        {
-            try
+        var dnsTask = Dns.GetHostEntryAsync(address).ContinueWith(t => t.IsCompletedSuccessfully ? t.Result.HostName : null);
+        var portTasks = new (int Port, string Label)[] { (102, "S7/ISO"), (502, "Modbus TCP"), (44818, "EtherNet/IP"), (4840, "OPC UA") }
+            .Select(async p =>
             {
-                using var client = new TcpClient();
-                await client.ConnectAsync(address, port).WaitAsync(TimeSpan.FromMilliseconds(180));
-                labels.Add(port switch { 102 => "S7/ISO", 502 => "Modbus TCP", 44818 => "EtherNet/IP", 4840 => "OPC UA", _ => $"TCP {port}" });
-            }
-            catch { }
-        }
+                try
+                {
+                    using var client = new TcpClient();
+                    await client.ConnectAsync(address, p.Port).WaitAsync(TimeSpan.FromMilliseconds(80));
+                    return p.Label;
+                }
+                catch { return null; }
+            }).ToArray();
+        await Task.WhenAll(portTasks.Append(dnsTask));
+        if (await dnsTask is { } host) labels.Add(host);
+        labels.AddRange(portTasks.Select(t => t.Result).Where(x => x is not null)!);
         var index = -1;
         for (var i = 0; i < _devices.Count; i++)
             if (_devices[i].Address == address) { index = i; break; }
@@ -312,10 +316,11 @@ public partial class MainWindow : Window
     private async void Apply_Click(object sender, RoutedEventArgs e)
     {
         if (AdapterBox.SelectedItem is not Adapter adapter || ResultsGrid.SelectedItem is not Device device) return;
-        var local = ChooseLocalAddress(IPAddress.Parse(device.Address), adapter.Prefix, adapter.Gateway);
-        var mask = PrefixToMask(adapter.Prefix);
-        if (MessageBox.Show($"将 {adapter.Name} 设置为 {local}/{adapter.Prefix}。\n目标设备: {device.Address}\n\n当前网络连接会短暂中断。", "确认配置网卡", MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
-        await RunNetshAsync($"interface ipv4 set address name=\"{adapter.Name}\" static {local} {mask} {(string.IsNullOrWhiteSpace(adapter.Gateway) ? "none" : adapter.Gateway)}");
+        var prefix = adapter.Prefix is >= 24 and <= 30 ? adapter.Prefix : 24;
+        var local = ChooseLocalAddress(IPAddress.Parse(device.Address), prefix, adapter.Gateway);
+        var mask = PrefixToMask(prefix);
+        if (MessageBox.Show($"将 {adapter.Name} 设置为 {local}/{prefix}。\n目标设备: {device.Address}\n\n当前网络连接会短暂中断。", "确认配置网卡", MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
+        await RunNetshAsync($"interface ipv4 set address name=\"{adapter.Name}\" static {local} {mask} none");
         StatusText.Text = $"已向 {adapter.Name} 发送静态 IPv4 配置";
     }
 
