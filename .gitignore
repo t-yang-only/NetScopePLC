@@ -1,9 +1,14 @@
 bin/
 obj/
 publish/
-*.exe
 *.dll
 *.pdb
 *.obj
 *.user
 .vs/
+
+# Self-contained WPF publish is large; rebuild with build.bat
+NetScopePLC.exe
+
+# Native scan core is required beside the WPF app / for CopyToOutputDirectory
+!NetScopeNative.exe
