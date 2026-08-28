@@ -2,20 +2,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // 使用 IntelliSense 找出 C# 调试存在哪些属性
-            // 将悬停用于现有属性的说明
-            // 有关详细信息，请访问 https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md
-            "name": ".NET Core Launch (console)",
+            "name": "构建并打开",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            // 如果已更改目标框架，请确保更新程序路径。
-            "program": "${workspaceFolder}/bin/Debug/net10.0-windows/win-x64/NetScopePLC.dll",
+            "program": "${workspaceFolder}/bin/Debug/net10.0-windows/win-x64/NetScopePLC.exe",
             "args": [],
-            "cwd": "${workspaceFolder}",
-            // 有关“控制台”字段的详细信息，请参阅 https://aka.ms/VSCode-CS-LaunchJson-Console
-            "console": "internalConsole",
+            "cwd": "${workspaceFolder}/bin/Debug/net10.0-windows/win-x64",
             "stopAtEntry": false
+        },
+        {
+            "name": "命令行 --adapters",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net10.0-windows/win-x64/NetScopePLC.exe",
+            "args": ["--adapters"],
+            "cwd": "${workspaceFolder}/bin/Debug/net10.0-windows/win-x64",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
         },
         {
             "name": ".NET Core Attach",

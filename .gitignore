@@ -1,14 +1,17 @@
 bin/
 obj/
 publish/
+*.obj
 *.dll
 *.pdb
-*.obj
 *.user
 .vs/
 
-# Self-contained WPF publish is large; rebuild with build.bat
+# 发布产物仅保留在 publish/，由 build.bat 生成
 NetScopePLC.exe
 
-# Native scan core is required beside the WPF app / for CopyToOutputDirectory
+# 构建工具临时输出
+tools/ico-preview.png
+
+# Native scan core：源码编译输出，供开发调试与内嵌发布
 !NetScopeNative.exe

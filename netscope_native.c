@@ -189,7 +189,7 @@ static DWORD WINAPI scan_worker(void *argument)
         if (target == context->source)
             continue;
         count = IcmpSendEcho2Ex(icmp, NULL, NULL, NULL, context->source, target,
-                                "PLC", 3, NULL, reply, sizeof(reply), 40);
+                                "PLC", 3, NULL, reply, sizeof(reply), 20);
         InterlockedIncrement64(&context->scanned);
         if (count) {
             ICMP_ECHO_REPLY *echo = (ICMP_ECHO_REPLY *)reply;
@@ -247,9 +247,9 @@ static void scan_network(const wchar_t *source_text, const wchar_t *prefix_text)
     }
     InitializeCriticalSection(&context.output_lock);
     GetSystemInfo(&system_info);
-    thread_count = system_info.dwNumberOfProcessors * 16;
-    if (thread_count < 32) thread_count = 32;
-    if (thread_count > 64) thread_count = 64;
+    thread_count = system_info.dwNumberOfProcessors * 24;
+    if (thread_count < 48) thread_count = 48;
+    if (thread_count > 128) thread_count = 128;
     if ((uint64_t)thread_count > context.hosts) thread_count = (DWORD)context.hosts;
     threads = (HANDLE *)calloc(thread_count, sizeof(HANDLE));
     if (!threads) {

@@ -8,10 +8,74 @@
             "args": [
                 "build",
                 "${workspaceFolder}/NetScopePLC.csproj",
+                "-c",
+                "Debug",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-and-run-admin",
+            "type": "shell",
+            "command": "${workspaceFolder}/dev-run.bat",
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "watch-dev",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/watch-dev.ps1"
+            ],
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": false
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "build-and-run",
+            "dependsOn": "build",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/NetScopePLC.csproj",
+                "-c",
+                "Debug",
+                "--framework",
+                "net10.0-windows",
+                "--no-launch-profile"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-full",
+            "type": "shell",
+            "command": "${workspaceFolder}/build.bat",
+            "group": "build",
+            "problemMatcher": []
         },
         {
             "label": "publish",
@@ -22,18 +86,6 @@
                 "${workspaceFolder}/NetScopePLC.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/NetScopePLC.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
