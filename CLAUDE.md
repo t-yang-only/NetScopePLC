@@ -31,7 +31,7 @@
 - `PlcFingerprint.cs` / `DeviceFingerprint.cs` / `SocketProbe.cs` — protocol identify
 - `netscope_native.c` — bound-source ICMP flood + ARP neighbor dump
 - `tools/` — `make-ico.ps1`, `capture-window.ps1`
-- `docs/` — `screenshot.png`, `social-preview.png`
+- `docs/` — `social-preview.png`
 - `README.md` — GitHub docs; `README.txt` — operator quick reference
 
 ## Conventions

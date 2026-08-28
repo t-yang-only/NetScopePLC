@@ -25,12 +25,6 @@
 
 ---
 
-## 界面预览
-
-<p align="center">
-  <img src="docs/screenshot.png" width="92%" alt="NetScope PLC 主界面">
-</p>
-
 ## 下载与运行
 
 | 方式 | 说明 |
@@ -125,7 +119,7 @@ build.bat run    :: 构建后以管理员启动
 |------|------|
 | `publish/` | 发布产物（`build.bat` 生成，不入库） |
 | `bin/`、`obj/` | 临时构建输出 |
-| `docs/` | 截图与社交预览图 |
+| `docs/` | 社交预览图 `social-preview.png` |
 | `tools/` | 图标生成、窗口截图等构建辅助脚本 |
 | `README.txt` | 现场操作速查（纯文本） |
 
