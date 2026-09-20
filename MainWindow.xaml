@@ -1,7 +1,7 @@
 <Window x:Class="NetScopePLC.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="NetScope PLC 0.10" Width="1180" Height="732" MinWidth="1000" MinHeight="680"
+        Title="NetScope PLC 0.11" Width="1180" Height="732" MinWidth="1000" MinHeight="680"
         Icon="pack://application:,,,/app.ico"
         FontFamily="{StaticResource AppFont}"
         Background="{StaticResource Canvas}" WindowStartupLocation="CenterScreen"

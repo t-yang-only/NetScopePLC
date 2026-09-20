@@ -43,7 +43,8 @@
 | 三种扫描 | 本网段 · 常见内网段 · 手工 CIDR |
 | 临时改址 | 扫未知网段时临时设 IP，结束后自动恢复静态地址或 DHCP |
 | 双通道发现 | ICMP 应答 + 所选接口 ARP 邻居；不 Ping 但回 ARP 的设备也能进结果 |
-| 协议识别 | 反向 DNS，以及 S7 / Modbus / EtherNet/IP / OPC UA 端口指纹 |
+| 离线识别库 | 内置 IEEE 注册的 5 万余条 MAC 前缀（MA-L / MA-M / MA-S）与主机名/厂商规则表，**不联网也能识别厂商与设备类型**；随机/隐私 MAC 会明确标注 |
+| 协议识别 | S7 / Modbus / EtherNet/IP / OPC UA 端口指纹，以及反向 DNS 主机名（后台补全，不拖慢扫描） |
 | 设备分类 | 扫描目标可选 **PLC / HMI** 或 **其他设备**，识别逻辑不同 |
 | 现场改址 | 选中设备后一键把本机配到同网段，或恢复 DHCP |
 | 扫描控制 | 暂停 / 继续 / 停止 |
@@ -91,6 +92,8 @@ NetScopeNative.exe       C 核心 · 绑定源地址 ICMP · ARP 邻居导出
 | `Program.cs` / `CliRunner.cs` | 入口、管理员提权、CLI |
 | `NativeToolHost.cs` | 内嵌/旁路调用原生扫描核心 |
 | `PlcFingerprint.cs` / `DeviceFingerprint.cs` | PLC/HMI 与其他设备识别 |
+| `OfflineDb.cs` | 离线识别库：OUI 厂商表 + 主机名/厂商规则 |
+| `data/oui.tsv`、`data/identify.tsv` | 离线识别数据（内嵌进 exe，由 `tools\make-oui.ps1` 生成） |
 | `netscope_native.c` | ICMP 洪泛 + ARP 导出 |
 
 ## 构建
@@ -106,6 +109,20 @@ build.bat run    :: 构建后以管理员启动
 - .NET 10 SDK
 
 `tools\make-ico.ps1` 在构建时从 `app-icon.png` 生成圆角 `app.ico`。
+`tools\make-oui.ps1` 从 IEEE 注册表重新生成 `data\oui.tsv`（产物已入库，日常构建不需要跑）。
+
+## 更新记录
+
+### 0.11
+
+- **内置离线识别库**：把 IEEE 注册的 MAC 前缀表（MA-L / MA-M / MA-S，53 964 条）与主机名/厂商规则表编译进 exe，识别设备不再依赖联网查询。
+- 设备型号优先取「协议指纹 → 工业 OUI → 离线厂商库」，认不出来的才落到「网络设备」；随机/隐私 MAC（本地管理位置 1）会标注「随机 MAC（隐私地址）」，不再静默留空。
+- 反向 DNS 主机名改为**后台补全**：本机路由器 PTR 反查实测要 17.5 秒，之前 1.2 秒的通用探针超时让它永远超时、主机名形同废设；现在设备先出行，名字回来后再回填型号。
+- PLC/HMI 模式不再把开了 80 端口的路由器/交换机一律叫「工业 HMI / 触摸屏」，先查离线厂商库。
+
+### 0.10
+
+- WPF 界面改版，新增 CLI（`--adapters` / `--scan`），C 扫描核心改为内嵌资源。
 
 ## 注意事项
 

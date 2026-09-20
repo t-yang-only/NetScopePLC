@@ -239,6 +239,10 @@ static void scan_network(const wchar_t *source_text, const wchar_t *prefix_text)
     ZeroMemory(&context, sizeof(context));
     context.source = source_address.S_un.S_addr;
     context.interface_index = interface_for_source(context.source);
+    if (!context.interface_index) {
+        fwprintf(stderr, L"ERROR\tsource %s is not assigned to any local adapter; scan skipped\n", source_text);
+        return;
+    }
     context.network = source & mask;
     context.hosts = (UINT64_C(1) << (32 - prefix));
     if (prefix <= 30) {
@@ -246,10 +250,17 @@ static void scan_network(const wchar_t *source_text, const wchar_t *prefix_text)
         context.hosts -= 2;
     }
     InitializeCriticalSection(&context.output_lock);
+    {
+        HANDLE probe = IcmpCreateFile();
+        if (probe == INVALID_HANDLE_VALUE)
+            fwprintf(stderr, L"WARN\tIcmpCreateFile failed (%lu); ICMP unavailable, ARP-only results\n", GetLastError());
+        else
+            CloseHandle(probe);
+    }
     GetSystemInfo(&system_info);
     thread_count = system_info.dwNumberOfProcessors * 24;
     if (thread_count < 48) thread_count = 48;
-    if (thread_count > 128) thread_count = 128;
+    if (thread_count > 60) thread_count = 60; /* WaitForMultipleObjects 上限 MAXIMUM_WAIT_OBJECTS = 64 */
     if ((uint64_t)thread_count > context.hosts) thread_count = (DWORD)context.hosts;
     threads = (HANDLE *)calloc(thread_count, sizeof(HANDLE));
     if (!threads) {
@@ -259,7 +270,8 @@ static void scan_network(const wchar_t *source_text, const wchar_t *prefix_text)
     }
     for (DWORD index = 0; index < thread_count; ++index)
         threads[index] = CreateThread(NULL, 0, scan_worker, &context, 0, NULL);
-    WaitForMultipleObjects(thread_count, threads, TRUE, INFINITE);
+    if (WaitForMultipleObjects(thread_count, threads, TRUE, INFINITE) == WAIT_FAILED)
+        fwprintf(stderr, L"ERROR\tWaitForMultipleObjects failed (%lu)\n", GetLastError());
     for (DWORD index = 0; index < thread_count; ++index)
         CloseHandle(threads[index]);
     output_arp_hosts(&context);

@@ -21,5 +21,10 @@
     <Resource Include="app-icon.png" />
     <EmbeddedResource Include="NetScopeNative.exe" LogicalName="NetScopeNative.exe" />
     <None Include="NetScopeNative.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" Condition="Exists('NetScopeNative.exe')" />
+    <!-- 离线识别库：IEEE OUI 厂商表 + 主机名/厂商规则表，随 exe 一起分发，识别不依赖网络 -->
+    <EmbeddedResource Include="data\oui.tsv" LogicalName="oui.tsv" />
+    <EmbeddedResource Include="data\identify.tsv" LogicalName="identify.tsv" />
+    <None Remove="data\oui.tsv" />
+    <None Remove="data\identify.tsv" />
   </ItemGroup>
 </Project>

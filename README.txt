@@ -1,4 +1,4 @@
-NetScope PLC 0.10
+NetScope PLC 0.11
 =================
 
 工业设备网络发现与地址配置 · Windows 本机工具
@@ -28,6 +28,8 @@ GitHub Releases: https://github.com/t-yang-only/NetScopePLC/releases/latest
   · 未知网段临时改址，结束后自动恢复
   · ICMP + ARP 双通道发现
   · 识别 S7(102) / Modbus(502) / EtherNet/IP(44818) / OPC UA(4840)
+  · 内置离线识别库（5 万余条 MAC 前缀 + 主机名规则），不联网也能认设备
+  · 反向 DNS 主机名后台补全，不拖慢扫描
   · 扫描目标：PLC·HMI 或 其他设备
   · 选中设备后配置同网段静态 IP 或恢复 DHCP
   · 暂停 / 停止扫描

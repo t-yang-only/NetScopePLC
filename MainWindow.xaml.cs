@@ -34,9 +34,12 @@ public partial class MainWindow : Window
     private readonly List<double> _segmentDurationsSeconds = [];
     private string? _scanBindIp;
     private readonly List<string> _simulationRoutes = [];
+    private readonly HashSet<string> _hostnameQueried = [];
 
     private const double RingCircumference = 163.36;
     private const double DefaultSegmentSeconds = 42;
+    // 反向 DNS 在本机路由器上要十几秒（实测 17.5s），所以它只在后台跑，不参与扫描节奏
+    private static readonly TimeSpan HostnameTimeout = TimeSpan.FromSeconds(20);
 
     public MainWindow()
     {
@@ -323,6 +326,11 @@ public partial class MainWindow : Window
                         RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8
                     }, EnableRaisingEvents = true
                     };
+                    _scanProcess.ErrorDataReceived += (_, error) =>
+                    {
+                        if (!string.IsNullOrWhiteSpace(error.Data))
+                            Dispatcher.Invoke(() => StatusText.Text = error.Data.Trim());
+                    };
                     _scanProcess.Start();
                     _scanProcess.BeginErrorReadLine();
                     while (await _scanProcess.StandardOutput.ReadLineAsync() is { } line)
@@ -335,6 +343,9 @@ public partial class MainWindow : Window
                     foreach (var d in _devices.Where(NeedsIdentify))
                         if (identifying.Add(d.Address))
                             identifyTasks.Add(IdentifyDeviceAsync(d.Address));
+                    // 识别必须在本段临时地址仍绑定时做完，否则套接字绑的是已被换掉的 IP
+                    await Task.WhenAll(identifyTasks);
+                    identifyTasks.Clear();
                 }
                 catch (Exception ex) when (!_stopRequested)
                 {
@@ -363,7 +374,6 @@ public partial class MainWindow : Window
                 }
                 catch (Exception ex) { StatusText.Text = $"扫描完成，恢复网卡失败：{ex.Message}"; }
             }
-            await Task.WhenAll(identifyTasks);
             if (!_paused && !_stopRequested)
             {
                 SetScanBadge("完成");
@@ -411,9 +421,10 @@ public partial class MainWindow : Window
             {
                 var latency = parts[0] == "HOST" ? $"{parts[2]} ms" : "ARP";
                 _devices.Add(new Device(parts[1], latency, "识别中…", mac));
+                QueueHostnameLookup(parts[1]);
             }
             else if (parts[0] == "ARP" && string.IsNullOrWhiteSpace(_devices[existing].Mac))
-                _devices[existing] = _devices[existing] with { Mac = mac, Latency = "ARP" };
+                _devices[existing] = _devices[existing] with { Mac = mac };
             ResultSummary.Text = $"共找到 {_devices.Count} 台设备";
             ScrollResultsToEnd();
             UpdateEmptyState();
@@ -442,6 +453,7 @@ public partial class MainWindow : Window
         var openPorts = await ProbeOpenPortsAsync(address, portDefs);
         string? model = await PlcFingerprint.ProbeAsync(address, mac, BindAddress());
         model ??= PlcFingerprint.IdentifyFromMac(mac);
+        model ??= OfflineDb.DeviceLabelForMac(mac);
         string? detail = null;
         if (openPorts.Any(p => p.Port is 80 or 8080))
         {
@@ -472,6 +484,40 @@ public partial class MainWindow : Window
     {
         var (model, detail) = await DeviceFingerprint.IdentifyOtherAsync(address, mac);
         return new Device(address, latency, model, mac, detail ?? "");
+    }
+
+    // 反向 DNS 在本机路由器上要十几秒，绝不能拖住扫描节奏：扫到就先出行，名字回来了再回填型号
+    private void QueueHostnameLookup(string address)
+    {
+        if (!_hostnameQueried.Add(address)) return;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var entry = await Dns.GetHostEntryAsync(address).WaitAsync(HostnameTimeout);
+                if (!string.IsNullOrWhiteSpace(entry.HostName))
+                    await Dispatcher.InvokeAsync(() => ApplyHostname(address, entry.HostName));
+            }
+            catch { }
+        });
+    }
+
+    private void ApplyHostname(string address, string host)
+    {
+        for (var i = 0; i < _devices.Count; i++)
+        {
+            if (_devices[i].Address != address) continue;
+            var device = _devices[i];
+            // 丢掉「未能读取具体型号」这类占位描述，否则会和刚回填上的型号自相矛盾
+            var kept = device.Detail.Replace(" · 未能读取具体型号", "").Replace("未能读取具体型号", "").Trim();
+            var detail = string.IsNullOrWhiteSpace(kept) ? host : $"{kept} · {host}";
+            var vague = device.Model.StartsWith("识别中", StringComparison.Ordinal)
+                        || device.Model is "网络设备" or "未知 PLC（仅二层可见）";
+            _devices[i] = vague
+                ? device with { Model = OfflineDb.LabelForHost(host) ?? host, Detail = detail }
+                : device with { Detail = detail };
+            return;
+        }
     }
 
     private async Task<List<(int Port, string Label)>> ProbeOpenPortsAsync(string address,
