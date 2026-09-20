@@ -13,6 +13,7 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Version>0.11.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <ApplicationDefinition Remove="App.xaml" />
