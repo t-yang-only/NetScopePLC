@@ -29,8 +29,10 @@
 - `Program.cs` / `CliRunner.cs` — entry, admin elevation, CLI
 - `NativeToolHost.cs` — extract embedded `NetScopeNative.exe` for scan subprocess
 - `PlcFingerprint.cs` / `DeviceFingerprint.cs` / `SocketProbe.cs` — protocol identify
+- `OfflineDb.cs` — offline identify library (IEEE OUI vendor table + host/vendor rules), loaded lazily from embedded resources
+- `data/oui.tsv`, `data/identify.tsv` — offline identify data, embedded into the exe; regenerate with `tools/make-oui.ps1`
 - `netscope_native.c` — bound-source ICMP flood + ARP neighbor dump
-- `tools/` — `make-ico.ps1`, `capture-window.ps1`
+- `tools/` — `make-ico.ps1`, `make-oui.ps1`, `capture-window.ps1`
 - `docs/` — `social-preview.png`
 - `README.md` — GitHub docs; `README.txt` — operator quick reference
 
@@ -38,4 +40,9 @@
 - Native stdout protocol (UTF-8, tab-separated): `HOST\tip\trtt`, `ARP\tip\tmac`, `DONE\tscanned\treplied`
 - Temporary IP changes must restore original static or DHCP in `finally`
 - Protocol fingerprint ports: 102 (S7), 502 (Modbus), 44818 (EtherNet/IP), 4840 (OPC UA)
+- Identify priority: protocol fingerprint → industrial OUI (`PlcFingerprint`) → offline vendor DB (`OfflineDb`); an open port alone never proves a model
+- `data/identify.tsv` vendor rules match on word boundaries — substring matching makes "Chengdu Quanjing **Intel**ligent" hit Intel
+- Reverse-DNS hostnames resolve in the background (routers here answer PTR in ~17.5 s) — never put a DNS lookup on the scan path
+- Keep the native thread pool below `MAXIMUM_WAIT_OBJECTS` (64); this project uses 60
+- Version lives in `<Version>` in the csproj; the window title in `MainWindow.xaml` must match it
 - Do not add layers/frameworks without need — intentionally a small monolith
